@@ -17,10 +17,10 @@ pub use self::head_bucket::HeadBucket;
 pub use self::head_object::HeadObject;
 #[cfg(feature = "full")]
 #[doc(inline)]
-pub use self::list_objects_v2::{ListObjectsV2, ListObjectsV2Response};
+pub use self::list_object_versions::{ListObjectVersions, ListObjectVersionsResponse};
 #[cfg(feature = "full")]
 #[doc(inline)]
-pub use self::list_object_versions::{ListObjectVersions, ListObjectVersionsResponse};
+pub use self::list_objects_v2::{ListObjectsV2, ListObjectsV2Response};
 pub use self::multipart_upload::abort::AbortMultipartUpload;
 #[cfg(feature = "full")]
 pub use self::multipart_upload::complete::CompleteMultipartUpload;
@@ -29,6 +29,8 @@ pub use self::multipart_upload::create::{CreateMultipartUpload, CreateMultipartU
 #[cfg(feature = "full")]
 pub use self::multipart_upload::list_parts::{ListParts, ListPartsResponse};
 pub use self::multipart_upload::upload::UploadPart;
+#[cfg(feature = "full")]
+pub use self::put_bucket_versioning::{PutBucketVersioning, VersioningStatus};
 pub use self::put_object::PutObject;
 use crate::{Map, Method};
 
@@ -43,10 +45,12 @@ mod get_object;
 mod head_bucket;
 mod head_object;
 #[cfg(feature = "full")]
-pub mod list_objects_v2;
-#[cfg(feature = "full")]
 pub mod list_object_versions;
+#[cfg(feature = "full")]
+pub mod list_objects_v2;
 mod multipart_upload;
+#[cfg(feature = "full")]
+mod put_bucket_versioning;
 mod put_object;
 
 /// A request which can be signed
