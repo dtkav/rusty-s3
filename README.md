@@ -55,6 +55,7 @@ More examples can be found in the examples directory on GitHub.
     * [`DeleteObject`][deleteobject]
     * [`DeleteObjects`][deleteobjects]
     * [`ListObjectsV2`][listobjectsv2]
+    * [`ListObjectVersions`][listobjectversions]
 * Multipart upload
     * [`CreateMultipartUpload`][completemultipart]
     * [`UploadPart`][uploadpart]
@@ -74,6 +75,7 @@ More examples can be found in the examples directory on GitHub.
 [getobject]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html
 [headobject]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html
 [listobjectsv2]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
+[listobjectversions]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectVersions.html
 [putobject]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
 [uploadpart]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart
 
