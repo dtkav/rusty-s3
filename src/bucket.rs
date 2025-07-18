@@ -12,6 +12,7 @@ use crate::actions::{
 #[cfg(feature = "full")]
 use crate::actions::{
     CompleteMultipartUpload, CreateMultipartUpload, DeleteObjects, ListObjectsV2, ListParts,
+    ListObjectVersions,
 };
 use crate::signing::util::percent_encode_path;
 
@@ -226,6 +227,18 @@ impl Bucket {
         credentials: Option<&'a Credentials>,
     ) -> ListObjectsV2<'a> {
         ListObjectsV2::new(self, credentials)
+    }
+
+    /// List all versions of the objects in the bucket.
+    ///
+    /// See [`ListObjectVersions`] for more details.
+    #[cfg(feature = "full")]
+    #[must_use]
+    pub fn list_object_versions<'a>(
+        &'a self,
+        credentials: Option<&'a Credentials>,
+    ) -> ListObjectVersions<'a> {
+        ListObjectVersions::new(self, credentials)
     }
 
     /// Upload a file to S3, using a `PUT` request.

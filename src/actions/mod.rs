@@ -18,6 +18,9 @@ pub use self::head_object::HeadObject;
 #[cfg(feature = "full")]
 #[doc(inline)]
 pub use self::list_objects_v2::{ListObjectsV2, ListObjectsV2Response};
+#[cfg(feature = "full")]
+#[doc(inline)]
+pub use self::list_object_versions::{ListObjectVersions, ListObjectVersionsResponse};
 pub use self::multipart_upload::abort::AbortMultipartUpload;
 #[cfg(feature = "full")]
 pub use self::multipart_upload::complete::CompleteMultipartUpload;
@@ -41,6 +44,8 @@ mod head_bucket;
 mod head_object;
 #[cfg(feature = "full")]
 pub mod list_objects_v2;
+#[cfg(feature = "full")]
+pub mod list_object_versions;
 mod multipart_upload;
 mod put_object;
 
