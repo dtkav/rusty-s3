@@ -10,8 +10,8 @@ use crate::actions::{
 };
 #[cfg(feature = "full")]
 use crate::actions::{
-    CompleteMultipartUpload, CreateMultipartUpload, DeleteObjects, ListObjectsV2, ListParts,
-    ListObjectVersions,
+    CompleteMultipartUpload, CreateMultipartUpload, DeleteObjects, ListObjectVersions,
+    ListObjectsV2, ListParts, PutBucketVersioning, VersioningStatus,
 };
 use crate::signing::util::percent_encode_path;
 use crate::Credentials;
@@ -239,6 +239,19 @@ impl Bucket {
         credentials: Option<&'a Credentials>,
     ) -> ListObjectVersions<'a> {
         ListObjectVersions::new(self, credentials)
+    }
+
+    /// Change the versioning status of this bucket.
+    ///
+    /// See [`PutBucketVersioning`] for more details.
+    #[cfg(feature = "full")]
+    #[must_use]
+    pub const fn put_bucket_versioning<'a>(
+        &'a self,
+        credentials: &'a Credentials,
+        status: VersioningStatus,
+    ) -> PutBucketVersioning<'a> {
+        PutBucketVersioning::new(self, credentials, status)
     }
 
     /// Upload a file to S3, using a `PUT` request.
