@@ -1,4 +1,3 @@
-use std::iter;
 use std::time::Duration;
 
 use jiff::Timestamp;
@@ -6,8 +5,7 @@ use url::Url;
 
 use crate::actions::Method;
 use crate::actions::S3Action;
-use crate::signing::sign;
-use crate::sorting_iter::SortingIterator;
+use crate::actions::request::{BuildRequest, RequestParts};
 use crate::{Bucket, Credentials, Map};
 
 /// Versioning status for a bucket.
@@ -36,7 +34,7 @@ impl VersioningStatus {
 #[derive(Debug, Clone)]
 pub struct PutBucketVersioning<'a> {
     bucket: &'a Bucket,
-    credentials: &'a Credentials,
+    credentials: Option<&'a Credentials>,
     status: VersioningStatus,
     mfa_delete: Option<bool>,
 
@@ -51,9 +49,17 @@ impl<'a> PutBucketVersioning<'a> {
         credentials: &'a Credentials,
         status: VersioningStatus,
     ) -> Self {
+        let mut action = Self::new_unsigned(bucket, status);
+        action.credentials = Some(credentials);
+        action
+    }
+
+    /// Construct an action for an external signer.
+    #[must_use]
+    pub const fn new_unsigned(bucket: &'a Bucket, status: VersioningStatus) -> Self {
         Self {
             bucket,
-            credentials,
+            credentials: None,
             status,
             mfa_delete: None,
             query: Map::new(),
@@ -97,20 +103,23 @@ impl<'a> S3Action<'a> for PutBucketVersioning<'a> {
     }
 
     fn sign_with_time(&self, expires_in: Duration, time: &Timestamp) -> Url {
-        let url = self.bucket.base_url().clone();
-        let query = SortingIterator::new(iter::once(("versioning", "")), self.query.iter());
+        let request = self.request_parts();
+        match self.credentials {
+            Some(credentials) => request.presign(credentials, expires_in, time),
+            None => request.into_url(),
+        }
+    }
+}
 
-        sign(
-            time,
+impl BuildRequest for PutBucketVersioning<'_> {
+    fn request_parts(&self) -> RequestParts<'_> {
+        RequestParts::new(
             Self::METHOD,
-            url,
-            self.credentials.key(),
-            self.credentials.secret(),
-            self.credentials.token(),
+            self.bucket.base_url().clone(),
             self.bucket.region(),
-            expires_in.as_secs(),
-            query,
-            self.headers.iter(),
+            &self.headers,
+            &self.query,
+            vec![("versioning", "".into())],
         )
     }
 }

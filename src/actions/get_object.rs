@@ -5,7 +5,7 @@ use url::Url;
 
 use super::S3Action;
 use crate::actions::Method;
-use crate::signing::sign;
+use crate::actions::request::{BuildRequest, RequestParts};
 use crate::{Bucket, Credentials, Map};
 
 /// Retrieve an object from S3, using a `GET` request.
@@ -54,23 +54,24 @@ impl<'a> S3Action<'a> for GetObject<'a> {
     }
 
     fn sign_with_time(&self, expires_in: Duration, time: &Timestamp) -> Url {
-        let url = self.bucket.object_url(self.object).unwrap();
-
+        let request = self.request_parts();
         match self.credentials {
-            Some(credentials) => sign(
-                time,
-                Self::METHOD,
-                url,
-                credentials.key(),
-                credentials.secret(),
-                credentials.token(),
-                self.bucket.region(),
-                expires_in.as_secs(),
-                self.query.iter(),
-                self.headers.iter(),
-            ),
-            None => crate::signing::util::add_query_params(url, self.query.iter()),
+            Some(credentials) => request.presign(credentials, expires_in, time),
+            None => crate::signing::util::add_query_params(request.base_url, self.query.iter()),
         }
+    }
+}
+
+impl BuildRequest for GetObject<'_> {
+    fn request_parts(&self) -> RequestParts<'_> {
+        RequestParts::new(
+            Self::METHOD,
+            self.bucket.object_url(self.object).unwrap(),
+            self.bucket.region(),
+            &self.headers,
+            &self.query,
+            vec![],
+        )
     }
 }
 

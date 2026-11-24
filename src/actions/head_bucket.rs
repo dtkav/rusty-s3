@@ -5,7 +5,7 @@ use url::Url;
 
 use super::S3Action;
 use crate::actions::Method;
-use crate::signing::sign;
+use crate::actions::request::{BuildRequest, RequestParts};
 use crate::{Bucket, Credentials, Map};
 
 /// Retrieve an bucket's metadata from S3, using a `HEAD` request.
@@ -48,23 +48,24 @@ impl<'a> S3Action<'a> for HeadBucket<'a> {
     }
 
     fn sign_with_time(&self, expires_in: Duration, time: &Timestamp) -> Url {
-        let url = self.bucket.base_url().clone();
-
+        let request = self.request_parts();
         match self.credentials {
-            Some(credentials) => sign(
-                time,
-                Self::METHOD,
-                url,
-                credentials.key(),
-                credentials.secret(),
-                credentials.token(),
-                self.bucket.region(),
-                expires_in.as_secs(),
-                self.query.iter(),
-                self.headers.iter(),
-            ),
-            None => crate::signing::util::add_query_params(url, self.query.iter()),
+            Some(credentials) => request.presign(credentials, expires_in, time),
+            None => crate::signing::util::add_query_params(request.base_url, self.query.iter()),
         }
+    }
+}
+
+impl BuildRequest for HeadBucket<'_> {
+    fn request_parts(&self) -> RequestParts<'_> {
+        RequestParts::new(
+            Self::METHOD,
+            self.bucket.base_url().clone(),
+            self.bucket.region(),
+            &self.headers,
+            &self.query,
+            vec![],
+        )
     }
 }
 

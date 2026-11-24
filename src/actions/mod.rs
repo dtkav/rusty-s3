@@ -34,6 +34,9 @@ pub use self::put_bucket_versioning::{PutBucketVersioning, VersioningStatus};
 pub use self::put_object::PutObject;
 use crate::{Map, Method};
 
+mod request;
+pub use self::request::{PrepareRequest, UnsignedRequest};
+
 mod create_bucket;
 mod delete_bucket;
 mod delete_object;
@@ -53,7 +56,7 @@ mod multipart_upload;
 mod put_bucket_versioning;
 mod put_object;
 
-/// A request which can be signed
+/// A signable S3 request. Use [`PrepareRequest`] to sign it externally.
 pub trait S3Action<'a> {
     const METHOD: Method;
 

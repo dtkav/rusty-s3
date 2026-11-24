@@ -1,4 +1,3 @@
-use std::iter;
 use std::time::Duration;
 
 use jiff::Timestamp;
@@ -7,8 +6,7 @@ use url::Url;
 
 use super::S3Action;
 use crate::actions::Method;
-use crate::signing::sign;
-use crate::sorting_iter::SortingIterator;
+use crate::actions::request::{BuildRequest, RequestParts};
 use crate::{Bucket, Credentials, Map};
 
 const POLICY_PARAM: &str = "policy";
@@ -71,24 +69,24 @@ impl<'a> S3Action<'a> for GetBucketPolicy<'a> {
     }
 
     fn sign_with_time(&self, expires_in: Duration, time: &Timestamp) -> Url {
-        let url = self.bucket.base_url().clone();
-        let query = SortingIterator::new(iter::once((POLICY_PARAM, "")), self.query.iter());
-
+        let request = self.request_parts();
         match self.credentials {
-            Some(credentials) => sign(
-                time,
-                Self::METHOD,
-                url,
-                credentials.key(),
-                credentials.secret(),
-                credentials.token(),
-                self.bucket.region(),
-                expires_in.as_secs(),
-                query,
-                self.headers.iter(),
-            ),
-            None => crate::signing::util::add_query_params(url, self.query.iter()),
+            Some(credentials) => request.presign(credentials, expires_in, time),
+            None => crate::signing::util::add_query_params(request.base_url, self.query.iter()),
         }
+    }
+}
+
+impl BuildRequest for GetBucketPolicy<'_> {
+    fn request_parts(&self) -> RequestParts<'_> {
+        RequestParts::new(
+            Self::METHOD,
+            self.bucket.base_url().clone(),
+            self.bucket.region(),
+            &self.headers,
+            &self.query,
+            vec![(POLICY_PARAM, "".into())],
+        )
     }
 }
 

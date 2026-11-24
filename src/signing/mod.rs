@@ -8,6 +8,7 @@ use crate::sorting_iter::SortingIterator;
 use crate::time::{ISO8601, YYYYMMDD};
 
 mod canonical_request;
+pub(crate) use canonical_request::canonical_query_string;
 mod signature;
 mod string_to_sign;
 pub(crate) mod util;

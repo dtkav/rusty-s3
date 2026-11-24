@@ -5,7 +5,7 @@ use url::Url;
 
 use crate::actions::Method;
 use crate::actions::S3Action;
-use crate::signing::sign;
+use crate::actions::request::{BuildRequest, RequestParts};
 use crate::{Bucket, Credentials, Map};
 
 /// Delete a bucket.
@@ -18,7 +18,7 @@ use crate::{Bucket, Credentials, Map};
 #[derive(Debug, Clone)]
 pub struct DeleteBucket<'a> {
     bucket: &'a Bucket,
-    credentials: &'a Credentials,
+    credentials: Option<&'a Credentials>,
 
     query: Map<'a>,
     headers: Map<'a>,
@@ -27,9 +27,17 @@ pub struct DeleteBucket<'a> {
 impl<'a> DeleteBucket<'a> {
     #[must_use]
     pub const fn new(bucket: &'a Bucket, credentials: &'a Credentials) -> Self {
+        let mut action = Self::new_unsigned(bucket);
+        action.credentials = Some(credentials);
+        action
+    }
+
+    /// Construct an action for an external signer.
+    #[must_use]
+    pub const fn new_unsigned(bucket: &'a Bucket) -> Self {
         Self {
             bucket,
-            credentials,
+            credentials: None,
 
             query: Map::new(),
             headers: Map::new(),
@@ -49,19 +57,23 @@ impl<'a> S3Action<'a> for DeleteBucket<'a> {
     }
 
     fn sign_with_time(&self, expires_in: Duration, time: &Timestamp) -> Url {
-        let url = self.bucket.base_url().clone();
+        let request = self.request_parts();
+        match self.credentials {
+            Some(credentials) => request.presign(credentials, expires_in, time),
+            None => request.into_url(),
+        }
+    }
+}
 
-        sign(
-            time,
+impl BuildRequest for DeleteBucket<'_> {
+    fn request_parts(&self) -> RequestParts<'_> {
+        RequestParts::new(
             Self::METHOD,
-            url,
-            self.credentials.key(),
-            self.credentials.secret(),
-            self.credentials.token(),
+            self.bucket.base_url().clone(),
             self.bucket.region(),
-            expires_in.as_secs(),
-            self.query.iter(),
-            self.headers.iter(),
+            &self.headers,
+            &self.query,
+            vec![],
         )
     }
 }

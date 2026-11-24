@@ -1,4 +1,3 @@
-use std::iter;
 use std::time::Duration;
 
 use jiff::Timestamp;
@@ -7,8 +6,7 @@ use url::Url;
 
 use crate::actions::Method;
 use crate::actions::S3Action;
-use crate::signing::sign;
-use crate::sorting_iter::SortingIterator;
+use crate::actions::request::{BuildRequest, RequestParts};
 use crate::{Bucket, Credentials, Map};
 
 /// Complete a multipart upload.
@@ -114,24 +112,30 @@ where
     }
 
     fn sign_with_time(&self, expires_in: Duration, time: &Timestamp) -> Url {
-        let url = self.bucket.object_url(self.object).unwrap();
-        let query = iter::once(("uploadId", self.upload_id));
-
+        let request = self.request_parts();
         match self.credentials {
-            Some(credentials) => sign(
-                time,
-                Self::METHOD,
-                url,
-                credentials.key(),
-                credentials.secret(),
-                credentials.token(),
-                self.bucket.region(),
-                expires_in.as_secs(),
-                SortingIterator::new(query, self.query.iter()),
-                self.headers.iter(),
+            Some(credentials) => request.presign(credentials, expires_in, time),
+            None => crate::signing::util::add_query_params(
+                request.base_url,
+                request.query.operation_pairs(),
             ),
-            None => crate::signing::util::add_query_params(url, query),
         }
+    }
+}
+
+impl<'a, I> BuildRequest for CompleteMultipartUpload<'a, I>
+where
+    I: Iterator<Item = &'a str>,
+{
+    fn request_parts(&self) -> RequestParts<'_> {
+        RequestParts::new(
+            Self::METHOD,
+            self.bucket.object_url(self.object).unwrap(),
+            self.bucket.region(),
+            &self.headers,
+            &self.query,
+            vec![("uploadId", self.upload_id.into())],
+        )
     }
 }
 

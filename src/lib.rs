@@ -43,7 +43,7 @@
 )]
 #![cfg_attr(not(test), forbid(unsafe_code))]
 
-pub use self::actions::S3Action;
+pub use self::actions::{PrepareRequest, S3Action, UnsignedRequest};
 pub use self::bucket::{Bucket, BucketError, UrlStyle};
 pub use self::credentials::Credentials;
 pub use self::map::Map;

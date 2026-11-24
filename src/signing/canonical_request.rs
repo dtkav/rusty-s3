@@ -42,7 +42,10 @@ where
     string
 }
 
-fn canonical_query_string<'a, Q>(query_string: Q, mut out: impl fmt::Write) -> fmt::Result
+pub(crate) fn canonical_query_string<'a, Q>(
+    query_string: Q,
+    mut out: impl fmt::Write,
+) -> fmt::Result
 where
     Q: Iterator<Item = (&'a str, &'a str)>,
 {
